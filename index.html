@@ -37,6 +37,11 @@
       gap: 18px;
       height: 100vh;
       padding: 18px;
+      transition: grid-template-columns .22s ease;
+    }
+
+    .app.sidebar-collapsed {
+      grid-template-columns: 64px 1fr;
     }
 
     .panel {
@@ -48,11 +53,52 @@
     }
 
     .sidebar {
+      position: relative;
       padding: 18px;
       display: flex;
       flex-direction: column;
       gap: 14px;
       overflow: auto;
+      min-width: 0;
+      transition: padding .22s ease;
+    }
+
+    .sidebar-toggle {
+      position: sticky;
+      top: 0;
+      z-index: 8;
+      align-self: flex-end;
+      width: 42px;
+      min-width: 42px;
+      padding: 10px 0;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      background: rgba(255,255,255,.08);
+    }
+
+    .sidebar-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .app.sidebar-collapsed .sidebar {
+      padding: 18px 10px;
+      overflow: hidden;
+    }
+
+    .app.sidebar-collapsed .sidebar-body {
+      opacity: 0;
+      pointer-events: none;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+
+    .app.sidebar-collapsed .sidebar-toggle {
+      align-self: center;
     }
 
     h1 {
@@ -279,12 +325,27 @@
     .hidden { display: none !important; }
 
     @media (max-width: 980px) {
-      .app {
+      .app,
+      .app.sidebar-collapsed {
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
         overflow: auto;
         height: auto;
         min-height: 100vh;
+      }
+      .sidebar-toggle {
+        position: static;
+      }
+      .app.sidebar-collapsed .sidebar {
+        padding: 18px;
+        overflow: auto;
+      }
+      .app.sidebar-collapsed .sidebar-body {
+        opacity: 1;
+        pointer-events: auto;
+        width: auto;
+        height: auto;
+        overflow: visible;
       }
       .stage {
         min-height: 58vh;
@@ -323,12 +384,14 @@
   </style>
 </head>
 <body>
-  <div class="app">
-    <aside class="panel sidebar">
-      <div>
-        <img class="brand-title" src="./ViZShowTitle.png" alt="VizShow ©" />
-        <p class="sub">Load a GIF or video, loop it, scale it, and use it as a fullscreen visualizer.</p>
-      </div>
+  <div class="app" id="appShell">
+    <aside class="panel sidebar" id="sidebar">
+      <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Minimize left menu" aria-expanded="true" title="Minimize left menu">⟨</button>
+      <div class="sidebar-body" id="sidebarBody">
+        <div>
+          <img class="brand-title" src="./ViZShowTitle.png" alt="VizShow ©" />
+          <p class="sub">Load a GIF or video, loop it, scale it, and use it as a fullscreen visualizer.</p>
+        </div>
 
       <div class="group">
         <h2>Source</h2>
@@ -440,6 +503,7 @@
         <div class="row"><button id="restartBtn">Restart</button></div>
         <div class="row"><button class="danger" id="clearBtn">Clear media</button></div>
       </div>
+      </div>
     </aside>
 
     <main class="panel stage" id="stage">
@@ -459,7 +523,9 @@
   </div>
 
   <script>
-const fileInput = document.getElementById('fileInput');
+const appShell = document.getElementById('appShell');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const fileInput = document.getElementById('fileInput');
     const dropzone = document.getElementById('dropzone');
     const sourceMode = document.getElementById('sourceMode');
     const uploadSourceUI = document.getElementById('uploadSourceUI');
@@ -505,6 +571,20 @@ const fileInput = document.getElementById('fileInput');
     let quantumRibbonParticles = [];
     let mirrorTunnelStars = [];
 
+
+    function syncSidebarToggleUI() {
+      const collapsed = appShell.classList.contains('sidebar-collapsed');
+      sidebarToggle.textContent = collapsed ? '⟩' : '⟨';
+      sidebarToggle.setAttribute('aria-expanded', String(!collapsed));
+      sidebarToggle.setAttribute('aria-label', collapsed ? 'Expand left menu' : 'Minimize left menu');
+      sidebarToggle.title = collapsed ? 'Expand left menu' : 'Minimize left menu';
+    }
+
+    function toggleSidebar() {
+      if (window.innerWidth <= 980) return;
+      appShell.classList.toggle('sidebar-collapsed');
+      syncSidebarToggleUI();
+    }
 
     function revokeCurrentUrl() {
       if (currentUrl) {
@@ -2669,6 +2749,8 @@ const fileInput = document.getElementById('fileInput');
     playPauseBtn.addEventListener('click', togglePlayPause);
     miniPlayPause.addEventListener('click', togglePlayPause);
     restartBtn.addEventListener('click', restartMedia);
+    sidebarToggle.addEventListener('click', toggleSidebar);
+
     clearBtn.addEventListener('click', () => {
       clearMedia();
       fileInput.value = '';
@@ -2676,9 +2758,13 @@ const fileInput = document.getElementById('fileInput');
 
     window.addEventListener('beforeunload', revokeCurrentUrl);
     window.addEventListener('resize', () => {
+      if (window.innerWidth <= 980 && appShell.classList.contains('sidebar-collapsed')) {
+        appShell.classList.remove('sidebar-collapsed');
+      }
       if (currentType === 'preset' && currentElement?.tagName === 'CANVAS') {
         resizePresetCanvas(currentElement);
       }
+      syncSidebarToggleUI();
     });
     speedOut.textContent = `${Number(speedRange.value).toFixed(2)}x`;
     zoomOut.textContent = `${Number(zoomRange.value).toFixed(2)}x`;
@@ -2686,6 +2772,7 @@ const fileInput = document.getElementById('fileInput');
     presetHueSpeedOut.textContent = `${Number(presetHueSpeedRange.value).toFixed(2)}x`;
     stage.style.background = bgColor.value;
     syncSourceModeUI();
+    syncSidebarToggleUI();
 
   </script>
 </body>
