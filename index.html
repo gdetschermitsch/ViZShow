@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VizShow ©</title>
+  <link rel="icon" type="image/x-icon" href="./ViZShow.ico" />
+  <style>
+    :root {
+      --bg: #08090d;
+      --panel: #12141b;
+      --panel-2: #1a1d27;
+      --text: #f3f5f9;
+      --muted: #a7afbf;
+      --line: rgba(255,255,255,.09);
+      --accent: #7aa2ff;
+      --accent-2: #9f7aff;
+      --danger: #ff7a7a;
+      --radius: 18px;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at top, #151926 0%, var(--bg) 48%, #05060a 100%);
+      color: var(--text);
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      overflow: hidden;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+      height: 100vh;
+      padding: 18px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.02));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .sidebar {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: auto;
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      margin: 0;
+      letter-spacing: .02em;
+    }
+
+    .brand-title {
+      display: block;
+      width: min(100%, 320px);
+      height: auto;
+      margin: 0;
+      filter: drop-shadow(0 10px 22px rgba(96, 59, 255, .25));
+    }
+
+    .sub {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: .94rem;
+      line-height: 1.4;
+    }
+
+    .dropzone {
+      border: 1.5px dashed rgba(122,162,255,.45);
+      background: linear-gradient(180deg, rgba(122,162,255,.11), rgba(159,122,255,.08));
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+      transition: .18s ease;
+      cursor: pointer;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      transform: translateY(-1px);
+      border-color: rgba(159,122,255,.75);
+      background: linear-gradient(180deg, rgba(122,162,255,.18), rgba(159,122,255,.15));
+    }
+
+    .dropzone strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .dropzone span {
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    input[type="file"] { display: none; }
+
+    .group {
+      background: rgba(255,255,255,.025);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .group h2 {
+      margin: 0 0 12px;
+      font-size: .95rem;
+      color: #d9deea;
+      letter-spacing: .02em;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .row:last-child { margin-bottom: 0; }
+
+    .row label {
+      color: var(--muted);
+      font-size: .92rem;
+      flex: 1;
+    }
+
+    .row output {
+      min-width: 50px;
+      text-align: right;
+      color: #dfe6ff;
+      font-size: .9rem;
+    }
+
+    select, button, input[type="range"], input[type="color"] {
+      width: 100%;
+    }
+
+    select, button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: .94rem;
+    }
+
+    button {
+      cursor: pointer;
+      transition: .15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    .primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border: none;
+      color: white;
+      font-weight: 700;
+    }
+    .danger {
+      background: rgba(255,122,122,.12);
+      border-color: rgba(255,122,122,.2);
+      color: #ffd0d0;
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      width: auto;
+      cursor: pointer;
+      user-select: none;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .toggle input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .stage {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      background: #05060a;
+    }
+
+    .media-wrap {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .media-wrap img,
+    .media-wrap video,
+    .media-wrap canvas {
+      max-width: none;
+      max-height: none;
+      transform-origin: center center;
+      will-change: transform, filter;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none;
+      box-shadow: 0 0 80px rgba(0,0,0,.35);
+    }
+
+    .placeholder {
+      text-align: center;
+      padding: 30px;
+      color: var(--muted);
+      z-index: 2;
+    }
+
+    .placeholder strong {
+      display: block;
+      color: var(--text);
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .hud {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .badge {
+      pointer-events: auto;
+      background: rgba(0,0,0,.45);
+      border: 1px solid rgba(255,255,255,.08);
+      color: #eef2fb;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: .86rem;
+      backdrop-filter: blur(8px);
+      max-width: 60%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mini-controls {
+      pointer-events: auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    .mini-controls button {
+      width: auto;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.45);
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        overflow: auto;
+        height: auto;
+        min-height: 100vh;
+      }
+      .stage {
+        min-height: 58vh;
+      }
+    }
+	/* Scrollbars themed to match VizShow */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) rgba(255,255,255,.06);
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.04);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  border-radius: 999px;
+  border: 2px solid rgba(8,9,13,.9);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--accent-2), var(--accent));
+}
+
+*::-webkit-scrollbar-corner {
+  background: rgba(255,255,255,.04);
+}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel sidebar">
+      <div>
+        <img class="brand-title" src="./ViZShowTitle.png" alt="VizShow ©" />
+        <p class="sub">Load a GIF or video, loop it, scale it, and use it as a fullscreen visualizer.</p>
+      </div>
+
+      <div class="group">
+        <h2>Source</h2>
+        <div class="row">
+          <label for="sourceMode">Visualizer source</label>
+        </div>
+        <select id="sourceMode">
+          <option value="upload" selected>Uploaded GIF / Video</option>
+          <option value="preset">Preset Visual</option>
+        </select>
+
+        <div id="uploadSourceUI">
+          <label class="dropzone" id="dropzone" for="fileInput" style="margin-top:12px; display:block;">
+            <strong>Drop GIF or video here</strong>
+            <span>or click to browse • GIF, MP4, WEBM, OGG, MOV (browser support varies)</span>
+          </label>
+          <input id="fileInput" type="file" accept="image/gif,video/*" />
+        </div>
+
+        <div id="presetSourceUI" class="hidden" style="margin-top:12px;">
+          <div class="row">
+            <label for="presetSelect">Preset</label>
+          </div>
+          <select id="presetSelect">
+            <option value="heartbeat" selected>Heartbeat Wave</option>
+            <option value="oceanBreak">Ocean Break</option>
+            <option value="intensiveFlame">Intensive Flame</option>
+            <option value="fractalSink">Fractal Sink</option>
+            <option value="hyperJumpSpaceship">Hyper Jump Spaceship</option>
+            <option value="fractalCollapse">Fractal Collapse</option>
+            <option value="signalBloom">Signal Bloom</option>
+            <option value="bioPulse">Bio Pulse</option>
+            <option value="quantumDrift">Quantum Drift</option>
+            <option value="infiniteMirror">Infinite Mirror</option>
+            <option value="fractalCollapseSpiral">Fractal Collapse Spiral</option>
+            <option value="signalBloomOrbit">Signal Bloom Orbit</option>
+            <option value="bioPulseCells">Bio Pulse Cells</option>
+            <option value="quantumDriftRibbons">Quantum Drift Ribbons</option>
+            <option value="infiniteMirrorTunnel">Infinite Mirror Tunnel</option>
+            <option value="fractalPulse">Fractal Pulse</option>
+            <option value="signalWeave">Signal Weave</option>
+            <option value="bioLattice">Bio Lattice</option>
+            <option value="quantumTunnel">Quantum Tunnel</option>
+            <option value="mirrorShatter">Mirror Shatter</option>
+          </select>
+          <div class="row" style="margin-top:12px;">
+            <label for="presetHueSpeedRange">Hue drift</label>
+            <output id="presetHueSpeedOut">0.60x</output>
+          </div>
+          <input id="presetHueSpeedRange" type="range" min="0" max="3" step="0.05" value="0.6" />
+          <div class="row" style="margin-top:12px;">
+            <label for="presetAccentColor">Preset accent</label>
+          </div>
+          <input id="presetAccentColor" type="color" value="#ff4d6d" />
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>Playback</h2>
+        <div class="row">
+          <label class="toggle"><input id="loopToggle" type="checkbox" checked /> Loop media</label>
+        </div>
+        <div class="row">
+          <label class="toggle"><input id="autoplayToggle" type="checkbox" checked /> Autoplay on load</label>
+        </div>
+        <div class="row">
+          <label class="toggle"><input id="muteToggle" type="checkbox" checked /> Mute video audio</label>
+        </div>
+        <div class="row">
+          <label for="speedRange">Playback speed</label>
+          <output id="speedOut">1.00x</output>
+        </div>
+        <input id="speedRange" type="range" min="0.25" max="3" step="0.05" value="1" />
+      </div>
+
+      <div class="group">
+        <h2>Visual</h2>
+        <div class="row">
+          <label for="fitMode">Fit mode</label>
+        </div>
+        <select id="fitMode">
+          <option value="contain">Contain</option>
+          <option value="cover" selected>Cover</option>
+          <option value="stretch">Stretch</option>
+        </select>
+
+        <div class="row" style="margin-top:12px;">
+          <label for="zoomRange">Zoom</label>
+          <output id="zoomOut">1.00x</output>
+        </div>
+        <input id="zoomRange" type="range" min="0.25" max="4" step="0.01" value="1" />
+
+        <div class="row" style="margin-top:12px;">
+          <label for="brightnessRange">Brightness</label>
+          <output id="brightnessOut">100%</output>
+        </div>
+        <input id="brightnessRange" type="range" min="20" max="200" step="1" value="100" />
+
+        <div class="row" style="margin-top:12px;">
+          <label for="bgColor">Background</label>
+        </div>
+        <input id="bgColor" type="color" value="#05060a" />
+      </div>
+
+      <div class="group">
+        <h2>Actions</h2>
+        <div class="row"><button class="primary" id="fullscreenBtn">Toggle fullscreen</button></div>
+        <div class="row"><button id="playPauseBtn">Play / Pause</button></div>
+        <div class="row"><button id="restartBtn">Restart</button></div>
+        <div class="row"><button class="danger" id="clearBtn">Clear media</button></div>
+      </div>
+    </aside>
+
+    <main class="panel stage" id="stage">
+      <div class="media-wrap" id="mediaWrap"></div>
+      <div class="placeholder" id="placeholder">
+        <strong>No visual source loaded</strong>
+        Load a GIF or video, or switch to a preset visualizer source.
+      </div>
+      <div class="hud">
+        <div class="badge" id="fileBadge">Ready</div>
+        <div class="mini-controls">
+          <button id="miniPlayPause">Play / Pause</button>
+          <button id="miniFullscreen">Fullscreen</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const sourceMode = document.getElementById('sourceMode');
+    const uploadSourceUI = document.getElementById('uploadSourceUI');
+    const presetSourceUI = document.getElementById('presetSourceUI');
+    const presetSelect = document.getElementById('presetSelect');
+    const presetHueSpeedRange = document.getElementById('presetHueSpeedRange');
+    const presetHueSpeedOut = document.getElementById('presetHueSpeedOut');
+    const presetAccentColor = document.getElementById('presetAccentColor');
+    const mediaWrap = document.getElementById('mediaWrap');
+    const placeholder = document.getElementById('placeholder');
+    const stage = document.getElementById('stage');
+    const fileBadge = document.getElementById('fileBadge');
+
+    const loopToggle = document.getElementById('loopToggle');
+    const autoplayToggle = document.getElementById('autoplayToggle');
+    const muteToggle = document.getElementById('muteToggle');
+    const speedRange = document.getElementById('speedRange');
+    const speedOut = document.getElementById('speedOut');
+    const fitMode = document.getElementById('fitMode');
+    const zoomRange = document.getElementById('zoomRange');
+    const zoomOut = document.getElementById('zoomOut');
+    const brightnessRange = document.getElementById('brightnessRange');
+    const brightnessOut = document.getElementById('brightnessOut');
+    const bgColor = document.getElementById('bgColor');
+
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const miniPlayPause = document.getElementById('miniPlayPause');
+    const miniFullscreen = document.getElementById('miniFullscreen');
+
+    let currentElement = null;
+    let currentUrl = null;
+    let currentType = null;
+    let presetAnimationFrame = null;
+    let presetStartTime = 0;
+
+    let signalBloomTrail = [];
+    let quantumDriftParticles = [];
+    let signalBloomOrbitSeeds = [];
+    let bioPulseCells = [];
+    let quantumRibbonParticles = [];
+    let mirrorTunnelStars = [];
+
+
+    function revokeCurrentUrl() {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+        currentUrl = null;
+      }
+    }
+
+    function isGif(file) {
+      return file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
+    }
+
+    function isVideo(file) {
+      return file.type.startsWith('video/');
+    }
+
+    function stopPresetAnimation() {
+      if (presetAnimationFrame) {
+        cancelAnimationFrame(presetAnimationFrame);
+        presetAnimationFrame = null;
+      }
+    }
+
+    function clearMedia() {
+      stopPresetAnimation();
+      if (currentElement && currentElement.tagName === 'VIDEO') {
+        currentElement.pause();
+      }
+      mediaWrap.innerHTML = '';
+      currentElement = null;
+      currentType = null;
+      revokeCurrentUrl();
+      placeholder.classList.remove('hidden');
+      fileBadge.textContent = 'Ready';
+    }
+
+    function applyVisualState() {
+      if (!currentElement) return;
+
+      const zoom = Number(zoomRange.value);
+      const brightness = Number(brightnessRange.value);
+      currentElement.style.transform = `scale(${zoom})`;
+      currentElement.style.filter = `brightness(${brightness}%)`;
+      currentElement.style.minWidth = '';
+      currentElement.style.minHeight = '';
+      currentElement.style.maxWidth = '';
+      currentElement.style.maxHeight = '';
+
+      const fit = fitMode.value;
+      currentElement.style.width = '';
+      currentElement.style.height = '';
+      currentElement.style.objectFit = '';
+
+      if (currentElement.tagName === 'CANVAS') {
+        currentElement.style.width = '100%';
+        currentElement.style.height = '100%';
+      } else if (fit === 'stretch') {
+        currentElement.style.width = '100%';
+        currentElement.style.height = '100%';
+        if (currentElement.tagName === 'VIDEO') currentElement.style.objectFit = 'fill';
+      } else if (fit === 'cover') {
+        currentElement.style.width = '100%';
+        currentElement.style.height = '100%';
+        if (currentElement.tagName === 'VIDEO') {
+          currentElement.style.objectFit = 'cover';
+        } else {
+          currentElement.style.minWidth = '100%';
+          currentElement.style.minHeight = '100%';
+          currentElement.style.width = 'auto';
+          currentElement.style.height = 'auto';
+        }
+      } else {
+        currentElement.style.maxWidth = '100%';
+        currentElement.style.maxHeight = '100%';
+        if (currentElement.tagName === 'VIDEO') currentElement.style.objectFit = 'contain';
+      }
+
+      stage.style.background = bgColor.value;
+    }
+
+    function applyPlaybackState() {
+      if (!currentElement) return;
+      if (currentElement.tagName === 'VIDEO') {
+        currentElement.loop = loopToggle.checked;
+        currentElement.muted = muteToggle.checked;
+        currentElement.playbackRate = Number(speedRange.value);
+      }
+    }
+
+    async function safePlay() {
+      if (!currentElement || currentElement.tagName !== 'VIDEO') return;
+      try {
+        await currentElement.play();
+      } catch (err) {
+        console.warn('Autoplay was blocked by the browser until user interaction.', err);
+      }
+    }
+
+
+    function resizePresetCanvas(canvas) {
+      const rect = mediaWrap.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(rect.width * window.devicePixelRatio));
+      canvas.height = Math.max(1, Math.floor(rect.height * window.devicePixelRatio));
+    }
+
+    function createHeartbeatPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Heartbeat Wave';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Number(zoomRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 75 * hueDrift) % 360;
+        const pulse = heartbeatPulse(elapsed * Math.max(0.35, Number(speedRange.value)));
+        const centerY = h * 0.5;
+        const baseline = h * 0.06 * zoom;
+        const waveAmp = h * (0.055 + pulse * 0.07) * zoom;
+
+        ctx.clearRect(0, 0, w, h);
+
+        const bgGrad = ctx.createRadialGradient(w * 0.5, h * 0.5, h * 0.06, w * 0.5, h * 0.5, Math.max(w, h) * 0.7);
+        bgGrad.addColorStop(0, `hsla(${hue}, 85%, ${Math.min(20 + pulse * 15, 36)}%, 0.55)`);
+        bgGrad.addColorStop(0.45, `hsla(${(hue + 30) % 360}, 78%, 10%, 0.28)`);
+        bgGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.shadowBlur = 24 + pulse * 34;
+        ctx.shadowColor = `hsla(${hue}, 100%, 70%, 0.95)`;
+        ctx.lineWidth = Math.max(3, h * 0.008 * zoom);
+        ctx.strokeStyle = `hsla(${hue}, 100%, ${Math.min(60 + pulse * 12, 82)}%, ${Math.min(0.58 + pulse * 0.28, 0.95)})`;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 4) {
+          const t = x / w;
+          const beatShape = heartbeatShape((elapsed * 1.35 + t * 1.08) % 1);
+          const gentle = Math.sin((t * Math.PI * 8) + elapsed * 4.4) * baseline * 0.18;
+          const y = centerY + gentle - (beatShape * waveAmp);
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalAlpha = 0.18 + pulse * 0.16;
+        ctx.fillStyle = `hsla(${(hue + 8) % 360}, 100%, 70%, 0.75)`;
+        const heartX = w * (0.16 + ((elapsed * 0.12) % 0.68));
+        const heartY = centerY - h * 0.11 - pulse * h * 0.035;
+        drawHeart(ctx, heartX, heartY, Math.max(16, h * 0.028 * (1 + pulse * 0.3)));
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    
+    function createOceanBreakPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Ocean Break';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Number(zoomRange.value);
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hueBase = (accentHue + elapsed * 24 * hueDrift) % 360;
+        const surf = oceanSwell(elapsed * speed);
+        const foamGlow = 0.35 + surf * 0.65;
+
+        ctx.clearRect(0, 0, w, h);
+
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+        skyGrad.addColorStop(0, `hsl(${(hueBase + 28) % 360}, 70%, ${Math.min(18 + brightness * 10, 34)}%)`);
+        skyGrad.addColorStop(0.38, `hsl(${(hueBase + 10) % 360}, 82%, ${Math.min(13 + brightness * 7, 24)}%)`);
+        skyGrad.addColorStop(1, `hsl(${(hueBase - 18 + 360) % 360}, 85%, 6%)`);
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        const moonGlow = ctx.createRadialGradient(w * 0.72, h * 0.22, h * 0.01, w * 0.72, h * 0.22, h * 0.22);
+        moonGlow.addColorStop(0, `hsla(${(hueBase + 38) % 360}, 95%, 82%, ${0.32 + foamGlow * 0.12})`);
+        moonGlow.addColorStop(0.35, `hsla(${(hueBase + 24) % 360}, 95%, 62%, 0.14)`);
+        moonGlow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = moonGlow;
+        ctx.fillRect(0, 0, w, h);
+
+        const horizonY = h * 0.42;
+        const layers = [
+          { amp: h * 0.016 * zoom, freq: 1.4, speed: 0.55, alpha: 0.22, light: 48, sat: 82, offset: 0.0, rise: 0.02 },
+          { amp: h * 0.03 * zoom,  freq: 2.1, speed: 0.8,  alpha: 0.34, light: 40, sat: 86, offset: 1.7, rise: 0.11 },
+          { amp: h * 0.05 * zoom,  freq: 2.8, speed: 1.15, alpha: 0.55, light: 34, sat: 92, offset: 2.6, rise: 0.2 },
+          { amp: h * 0.08 * zoom,  freq: 3.4, speed: 1.45, alpha: 0.82, light: 26, sat: 96, offset: 3.8, rise: 0.31 }
+        ];
+
+        for (const layer of layers) {
+          ctx.beginPath();
+          ctx.moveTo(0, h);
+          for (let x = 0; x <= w; x += 6) {
+            const t = x / w;
+            const swell = Math.sin(t * Math.PI * layer.freq * 2 + elapsed * layer.speed * 2.2 + layer.offset) * layer.amp;
+            const chop = Math.sin(t * Math.PI * (layer.freq * 5.5) - elapsed * layer.speed * 3.8 + layer.offset * 1.3) * layer.amp * 0.18;
+            const breaker = Math.max(0, Math.sin(t * Math.PI * (layer.freq * 1.35) + elapsed * layer.speed * 1.15 - 0.8));
+            const y = horizonY + h * layer.rise + swell + chop - breaker * layer.amp * 0.24;
+            ctx.lineTo(x, y);
+          }
+          ctx.lineTo(w, h);
+          ctx.closePath();
+          ctx.fillStyle = `hsla(${(hueBase - 12 + 360) % 360}, ${layer.sat}%, ${Math.max(8, layer.light)}%, ${layer.alpha})`;
+          ctx.fill();
+        }
+
+        ctx.save();
+        ctx.lineWidth = Math.max(2, h * 0.0042 * zoom);
+        ctx.shadowBlur = 16 + 22 * foamGlow;
+        ctx.shadowColor = `hsla(${(hueBase + 34) % 360}, 100%, 80%, ${0.34 + foamGlow * 0.22})`;
+        ctx.strokeStyle = `hsla(${(hueBase + 42) % 360}, 100%, ${70 + foamGlow * 12}%, ${0.42 + foamGlow * 0.16})`;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 5) {
+          const t = x / w;
+          const main = Math.sin(t * Math.PI * 7.2 - elapsed * speed * 2.65) * h * 0.018 * zoom;
+          const chop = Math.sin(t * Math.PI * 18.5 + elapsed * speed * 4.4) * h * 0.0048 * zoom;
+          const crash = Math.max(0, Math.sin(t * Math.PI * 3.2 + elapsed * speed * 1.9 - 0.55));
+          const y = h * 0.64 + main + chop - crash * h * 0.045 * zoom;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 18; i++) {
+          const drift = (elapsed * speed * (0.05 + i * 0.008) + i * 0.083) % 1;
+          const x = (w * ((i * 0.07 + drift) % 1));
+          const y = h * (0.49 + (i % 5) * 0.03) + Math.sin(elapsed * speed * 1.1 + i) * h * 0.008;
+          const radius = Math.max(3, h * 0.0035 * zoom * (1 + (i % 4) * 0.4));
+          const sparkle = ctx.createRadialGradient(x, y, 0, x, y, radius * 4.5);
+          sparkle.addColorStop(0, `hsla(${(hueBase + 46) % 360}, 100%, 88%, ${0.18 + foamGlow * 0.12})`);
+          sparkle.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = sparkle;
+          ctx.beginPath();
+          ctx.arc(x, y, radius * 4.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+
+    function createIntensiveFlamePreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Intensive Flame';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Number(zoomRange.value);
+        const speed = Math.max(0.25, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const heatHue = (accentHue + elapsed * 34 * hueDrift) % 360;
+        const flameBeat = flameEnergy(elapsed * speed);
+        const emberPhase = elapsed * speed * 1.8;
+
+        ctx.clearRect(0, 0, w, h);
+
+        const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+        bgGrad.addColorStop(0, `hsl(${(heatHue + 8) % 360}, 96%, ${Math.min(14 + brightness * 8, 26)}%)`);
+        bgGrad.addColorStop(0.38, `hsl(${(heatHue + 342) % 360}, 92%, ${Math.min(9 + brightness * 6, 18)}%)`);
+        bgGrad.addColorStop(1, 'hsl(0, 0%, 2%)');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        const glow = ctx.createRadialGradient(w * 0.5, h * 0.82, 0, w * 0.5, h * 0.82, h * 0.58);
+        glow.addColorStop(0, `hsla(${(heatHue + 14) % 360}, 100%, 56%, ${0.18 + flameBeat * 0.3})`);
+        glow.addColorStop(0.42, `hsla(${(heatHue + 2) % 360}, 100%, 42%, 0.14)`);
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, w, h);
+
+        const layers = [
+          { amp: h * 0.09 * zoom, width: 0.9, speed: 1.2, alpha: 0.24, hue: (heatHue + 10) % 360, light: 62, blur: 16 },
+          { amp: h * 0.14 * zoom, width: 1.15, speed: 1.55, alpha: 0.38, hue: (heatHue + 2) % 360, light: 54, blur: 22 },
+          { amp: h * 0.2 * zoom, width: 1.4, speed: 1.95, alpha: 0.58, hue: (heatHue + 352) % 360, light: 50, blur: 28 },
+          { amp: h * 0.26 * zoom, width: 1.7, speed: 2.25, alpha: 0.82, hue: (heatHue + 340) % 360, light: 48, blur: 34 }
+        ];
+
+        for (const layer of layers) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(0, h);
+          for (let x = 0; x <= w; x += 5) {
+            const t = x / w;
+            const taper = Math.pow(Math.sin(Math.PI * t), 0.72) * layer.width;
+            const body = flameColumn(t, elapsed * layer.speed * speed);
+            const lick = Math.sin(t * Math.PI * 11.5 + elapsed * layer.speed * 4.4) * 0.08;
+            const crackle = Math.max(0, Math.sin(t * Math.PI * 5.8 - elapsed * layer.speed * 3.1 + layer.width)) * 0.18;
+            const rise = layer.amp * (0.22 + body * 0.7 + lick + crackle) * taper;
+            const y = h - rise;
+            ctx.lineTo(x, y);
+          }
+          ctx.lineTo(w, h);
+          ctx.closePath();
+          ctx.shadowBlur = layer.blur + flameBeat * 14;
+          ctx.shadowColor = `hsla(${layer.hue}, 100%, ${Math.min(layer.light + 18, 82)}%, ${0.32 + layer.alpha * 0.3})`;
+          const fill = ctx.createLinearGradient(0, h, 0, h * 0.18);
+          fill.addColorStop(0, `hsla(${layer.hue}, 100%, ${Math.min(layer.light + 8, 78)}%, ${layer.alpha})`);
+          fill.addColorStop(0.45, `hsla(${(layer.hue + 18) % 360}, 100%, ${Math.min(layer.light + 16, 86)}%, ${Math.min(layer.alpha + 0.08, 0.96)})`);
+          fill.addColorStop(1, `hsla(${(layer.hue + 32) % 360}, 100%, 70%, 0.05)`);
+          ctx.fillStyle = fill;
+          ctx.fill();
+          ctx.restore();
+        }
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.shadowBlur = 18 + flameBeat * 18;
+        ctx.shadowColor = `hsla(${(heatHue + 24) % 360}, 100%, 78%, 0.55)`;
+        ctx.strokeStyle = `hsla(${(heatHue + 30) % 360}, 100%, 80%, ${0.2 + flameBeat * 0.15})`;
+        ctx.lineWidth = Math.max(1.5, h * 0.0032 * zoom);
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          for (let x = 0; x <= w; x += 8) {
+            const t = x / w;
+            const arch = Math.pow(Math.sin(Math.PI * t), 1.4);
+            const y = h * (0.9 - arch * (0.16 + i * 0.05)) + Math.sin(t * Math.PI * (7 + i * 2) + emberPhase * (2.8 + i)) * h * 0.01;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 38; i++) {
+          const drift = (emberPhase * (0.06 + i * 0.0025) + i * 0.071) % 1;
+          const x = w * ((i * 0.113 + Math.sin(emberPhase * 0.8 + i) * 0.02 + 1) % 1);
+          const y = h * (0.9 - drift * 0.7) + Math.sin(emberPhase * 1.9 + i * 0.6) * h * 0.018;
+          const r = Math.max(2, h * 0.0024 * zoom * (1 + (i % 4) * 0.45));
+          const ember = ctx.createRadialGradient(x, y, 0, x, y, r * 4.2);
+          ember.addColorStop(0, `hsla(${(heatHue + 28 + i * 2) % 360}, 100%, 82%, ${0.22 + (i % 3) * 0.08})`);
+          ember.addColorStop(0.45, `hsla(${(heatHue + 10 + i) % 360}, 100%, 58%, 0.16)`);
+          ember.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = ember;
+          ctx.beginPath();
+          ctx.arc(x, y, r * 4.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createFractalSinkPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Fractal Sink';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const sinkHue = (accentHue + elapsed * 52 * hueDrift) % 360;
+        const cx = w * 0.5;
+        const cy = h * 0.5;
+        const minDim = Math.min(w, h);
+        const spiralSpin = elapsed * speed * 1.1;
+        const sinkPulse = 0.55 + 0.45 * Math.sin(elapsed * speed * 1.8);
+
+        ctx.clearRect(0, 0, w, h);
+
+        const bg = ctx.createRadialGradient(cx, cy, minDim * 0.02, cx, cy, minDim * 0.72);
+        bg.addColorStop(0, `hsla(${(sinkHue + 18) % 360}, 92%, ${Math.max(4, 8 + brightness * 5)}%, 0.95)`);
+        bg.addColorStop(0.4, `hsla(${(sinkHue + 320) % 360}, 88%, ${Math.max(3, 6 + brightness * 4)}%, 0.92)`);
+        bg.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 58; i++) {
+          const p = i / 58;
+          const ringScale = Math.pow(1 - p, 1.65);
+          const radius = minDim * (0.48 * ringScale) * (0.8 + zoom * 0.22);
+          const swirl = spiralSpin * (1.2 + p * 5.4) + p * Math.PI * 9.0;
+          const wobble = Math.sin(elapsed * speed * 2.2 + i * 0.6) * minDim * 0.004;
+          const orbitX = cx + Math.cos(swirl) * wobble * (1 + p * 3);
+          const orbitY = cy + Math.sin(swirl * 1.15) * wobble * (1 + p * 3);
+          const arcGap = 0.9 + p * 2.3;
+          const lineW = Math.max(1, minDim * 0.0018 * (1 + (1 - p) * 4) * zoom);
+          const light = 42 + (1 - p) * 28 + sinkPulse * 8;
+
+          ctx.strokeStyle = `hsla(${(sinkHue + p * 210 + elapsed * 22) % 360}, 100%, ${light}%, ${0.1 + (1 - p) * 0.52})`;
+          ctx.shadowBlur = 8 + (1 - p) * 20;
+          ctx.shadowColor = `hsla(${(sinkHue + p * 160) % 360}, 100%, 72%, ${0.16 + (1 - p) * 0.28})`;
+          ctx.lineWidth = lineW;
+          ctx.beginPath();
+          ctx.arc(orbitX, orbitY, Math.max(0, radius), swirl, swirl + Math.PI * arcGap);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < 220; i++) {
+          const seed = i * 12.9898;
+          const f = fract(seed);
+          const depth = fract(seed * 0.137 + elapsed * speed * 0.08);
+          const angle = spiralSpin * (1.4 + depth * 6) + i * 0.41 + Math.sin(elapsed * 0.2 + i) * 0.08;
+          const radius = Math.pow(1 - depth, 2.15) * minDim * 0.46 * (0.78 + zoom * 0.24);
+          const x = cx + Math.cos(angle) * radius;
+          const y = cy + Math.sin(angle * 1.04) * radius;
+          const r = Math.max(0.8, minDim * 0.0015 * (1 + (1 - depth) * 5));
+          const orb = ctx.createRadialGradient(x, y, 0, x, y, r * 6);
+          orb.addColorStop(0, `hsla(${(sinkHue + depth * 260 + i * 2) % 360}, 100%, ${58 + (1 - depth) * 24}%, ${0.05 + (1 - depth) * 0.28})`);
+          orb.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = orb;
+          ctx.beginPath();
+          ctx.arc(x, y, r * 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const spokes = 14;
+        for (let i = 0; i < spokes; i++) {
+          const a = (Math.PI * 2 / spokes) * i + spiralSpin * 0.55;
+          const inner = minDim * (0.05 + sinkPulse * 0.012);
+          const outer = minDim * (0.2 + zoom * 0.08 + ((i % 3) * 0.015));
+          const grad = ctx.createLinearGradient(
+            cx + Math.cos(a) * inner,
+            cy + Math.sin(a) * inner,
+            cx + Math.cos(a) * outer,
+            cy + Math.sin(a) * outer
+          );
+          grad.addColorStop(0, `hsla(${(sinkHue + i * 14) % 360}, 100%, 72%, 0.18)`);
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = Math.max(1, minDim * 0.0024 * zoom);
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(a) * inner, cy + Math.sin(a) * inner);
+          ctx.lineTo(cx + Math.cos(a) * outer, cy + Math.sin(a) * outer);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, minDim * 0.13 * (0.9 + sinkPulse * 0.2));
+        core.addColorStop(0, 'rgba(0,0,0,0.98)');
+        core.addColorStop(0.58, `hsla(${(sinkHue + 45) % 360}, 100%, 70%, 0.16)`);
+        core.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(cx, cy, minDim * 0.16 * (0.88 + sinkPulse * 0.18), 0, Math.PI * 2);
+        ctx.fill();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+
+
+    function createHyperJumpSpaceshipPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Hyper Jump Spaceship';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const minDim = Math.min(w, h);
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Number(zoomRange.value);
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const warpHue = (accentHue + elapsed * 44 * hueDrift) % 360;
+        const cx = w * 0.5;
+        const cy = h * 0.5;
+        const warpPulse = 0.55 + 0.45 * Math.sin(elapsed * speed * 2.6);
+
+        ctx.clearRect(0, 0, w, h);
+
+        const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.75);
+        bg.addColorStop(0, `hsla(${(warpHue + 18) % 360}, 95%, ${Math.min(10 + brightness * 8, 24)}%, 0.96)`);
+        bg.addColorStop(0.36, `hsla(${(warpHue + 300) % 360}, 88%, 8%, 0.88)`);
+        bg.addColorStop(0.72, `hsla(${(warpHue + 250) % 360}, 70%, 4%, 0.92)`);
+        bg.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        const tunnelGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, minDim * 0.44 * zoom);
+        tunnelGlow.addColorStop(0, `hsla(${(warpHue + 42) % 360}, 100%, 78%, ${0.16 + warpPulse * 0.1})`);
+        tunnelGlow.addColorStop(0.2, `hsla(${(warpHue + 12) % 360}, 100%, 58%, 0.08)`);
+        tunnelGlow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = tunnelGlow;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 150; i++) {
+          const seed = i * 0.61803398875;
+          const lane = fract(seed * 2.17 + 0.13);
+          const angle = lane * Math.PI * 2 + Math.sin(elapsed * 0.4 + i * 0.2) * 0.03;
+          const depth = fract(1 - (elapsed * speed * (0.24 + (i % 9) * 0.026) + i * 0.071));
+          const startR = minDim * 0.03 * zoom + depth * minDim * 0.1 * zoom;
+          const endR = minDim * (0.14 + Math.pow(1 - depth, 2.05) * 0.82) * zoom;
+          const x1 = cx + Math.cos(angle) * startR;
+          const y1 = cy + Math.sin(angle) * startR;
+          const x2 = cx + Math.cos(angle) * endR;
+          const y2 = cy + Math.sin(angle) * endR;
+          const alpha = 0.05 + Math.pow(1 - depth, 2.8) * 0.9;
+          const width = Math.max(1, minDim * 0.0018 * zoom + Math.pow(1 - depth, 2.4) * minDim * 0.006);
+          const streakHue = (warpHue + i * 2.4 + depth * 80) % 360;
+
+          const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+          grad.addColorStop(0, `hsla(${(streakHue + 28) % 360}, 100%, 88%, 0)`);
+          grad.addColorStop(0.18, `hsla(${(streakHue + 8) % 360}, 100%, 82%, ${alpha * 0.5})`);
+          grad.addColorStop(0.75, `hsla(${streakHue}, 100%, ${Math.min(70 + alpha * 14, 88)}%, ${alpha})`);
+          grad.addColorStop(1, `hsla(${(streakHue + 40) % 360}, 100%, 92%, ${alpha * 0.35})`);
+
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = width;
+          ctx.shadowBlur = 8 + alpha * 24;
+          ctx.shadowColor = `hsla(${streakHue}, 100%, 80%, ${alpha * 0.45})`;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let r = 0; r < 6; r++) {
+          const ringPhase = fract(elapsed * speed * (0.13 + r * 0.025) + r * 0.16);
+          const radius = minDim * (0.08 + ringPhase * 0.66) * zoom;
+          const ringAlpha = (1 - ringPhase) * 0.18;
+          ctx.strokeStyle = `hsla(${(warpHue + 16 + r * 12) % 360}, 100%, 76%, ${ringAlpha})`;
+          ctx.lineWidth = Math.max(1, minDim * 0.0023 * zoom * (1 - ringPhase * 0.5));
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = `hsla(${(warpHue + 32 + r * 10) % 360}, 100%, 70%, ${ringAlpha * 0.6})`;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, radius * 1.03, radius * 0.48, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const shipY = cy + h * 0.08;
+        const shipScale = Math.max(20, minDim * 0.032 * zoom);
+        ctx.translate(cx, shipY);
+        ctx.fillStyle = `hsla(${(warpHue + 210) % 360}, 45%, ${Math.min(68 + brightness * 8, 82)}%, 0.9)`;
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = `hsla(${(warpHue + 25) % 360}, 100%, 82%, 0.55)`;
+        ctx.beginPath();
+        ctx.moveTo(0, -shipScale * 1.8);
+        ctx.lineTo(shipScale * 0.65, shipScale * 0.5);
+        ctx.lineTo(shipScale * 0.24, shipScale * 0.28);
+        ctx.lineTo(shipScale * 0.12, shipScale * 1.65);
+        ctx.lineTo(0, shipScale * 1.1);
+        ctx.lineTo(-shipScale * 0.12, shipScale * 1.65);
+        ctx.lineTo(-shipScale * 0.24, shipScale * 0.28);
+        ctx.lineTo(-shipScale * 0.65, shipScale * 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        const canopy = ctx.createLinearGradient(0, -shipScale * 1.15, 0, shipScale * 0.1);
+        canopy.addColorStop(0, `hsla(${(warpHue + 118) % 360}, 100%, 80%, 0.88)`);
+        canopy.addColorStop(1, `hsla(${(warpHue + 182) % 360}, 100%, 58%, 0.22)`);
+        ctx.fillStyle = canopy;
+        ctx.beginPath();
+        ctx.moveTo(0, -shipScale * 1.02);
+        ctx.quadraticCurveTo(shipScale * 0.26, -shipScale * 0.4, 0, shipScale * 0.06);
+        ctx.quadraticCurveTo(-shipScale * 0.26, -shipScale * 0.4, 0, -shipScale * 1.02);
+        ctx.fill();
+
+        ctx.fillStyle = `hsla(${(warpHue + 28) % 360}, 100%, 72%, ${0.4 + warpPulse * 0.28})`;
+        ctx.beginPath();
+        ctx.moveTo(-shipScale * 0.2, shipScale * 1.12);
+        ctx.lineTo(0, shipScale * (2.2 + warpPulse * 0.9));
+        ctx.lineTo(shipScale * 0.2, shipScale * 1.12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, minDim * 0.11 * zoom);
+        core.addColorStop(0, `hsla(${(warpHue + 18) % 360}, 100%, 96%, ${0.35 + warpPulse * 0.18})`);
+        core.addColorStop(0.45, `hsla(${(warpHue + 36) % 360}, 100%, 74%, 0.14)`);
+        core.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(cx, cy, minDim * 0.11 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+
+    function createFractalCollapsePreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Fractal Collapse';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 36 * hueDrift) % 360;
+        const iterBase = Math.floor(24 + speed * 16 + zoom * 6);
+        const cols = Math.max(80, Math.floor(w / 5));
+        const rows = Math.max(50, Math.floor(h / 5));
+        const cellW = w / cols;
+        const cellH = h / rows;
+        const centerX = -0.62 + Math.sin(elapsed * speed * 0.24) * 0.08;
+        const centerY = Math.cos(elapsed * speed * 0.19) * 0.08;
+        const scale = (2.6 / Math.min(cols, rows)) / zoom;
+
+        const bg = ctx.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, Math.max(w, h) * 0.8);
+        bg.addColorStop(0, `hsla(${(hue + 16) % 360}, 90%, ${Math.min(12 + brightness * 7, 24)}%, 1)`);
+        bg.addColorStop(0.45, `hsla(${(hue + 310) % 360}, 85%, 7%, 1)`);
+        bg.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        for (let gy = 0; gy < rows; gy++) {
+          for (let gx = 0; gx < cols; gx++) {
+            const px = (gx - cols * 0.5) * scale + centerX;
+            const py = (gy - rows * 0.5) * scale + centerY;
+            let zx = 0;
+            let zy = 0;
+            let iter = 0;
+            const maxIter = iterBase + Math.floor(gaussian((gx / cols), 0.5, 0.28) * 18);
+            while (zx * zx + zy * zy <= 4 && iter < maxIter) {
+              const xt = zx * zx - zy * zy + px;
+              zy = 2 * zx * zy + py;
+              zx = xt;
+              iter++;
+            }
+            const escaped = iter < maxIter;
+            const intensity = escaped ? iter / maxIter : 0;
+            const light = escaped ? 28 + intensity * 46 : 4;
+            const sat = escaped ? 90 : 20;
+            const alpha = escaped ? 0.58 + intensity * 0.32 : 0.94;
+            ctx.fillStyle = escaped
+              ? `hsla(${(hue + intensity * 220 + elapsed * 20) % 360}, ${sat}%, ${light}%, ${alpha})`
+              : `hsla(${(hue + 40) % 360}, 20%, 4%, 0.98)`;
+            ctx.fillRect(gx * cellW, gy * cellH, Math.ceil(cellW) + 1, Math.ceil(cellH) + 1);
+          }
+        }
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const ring = ctx.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, Math.min(w, h) * 0.34 * zoom);
+        ring.addColorStop(0, `hsla(${(hue + 22) % 360}, 100%, 78%, 0.1)`);
+        ring.addColorStop(0.7, 'rgba(255,255,255,0)');
+        ctx.fillStyle = ring;
+        ctx.beginPath();
+        ctx.arc(w * 0.5, h * 0.5, Math.min(w, h) * 0.34 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createSignalBloomPreset() {
+      clearMedia();
+      signalBloomTrail = [];
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Signal Bloom';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 54 * hueDrift) % 360;
+        const ax = Math.sin(elapsed * speed * 2.2) * w * 0.26 * zoom;
+        const ay = Math.sin(elapsed * speed * 3.1 + Math.PI * 0.35) * h * 0.24 * zoom;
+        const bx = Math.sin(elapsed * speed * 4.7 + Math.PI * 0.65) * w * 0.08 * zoom;
+        const by = Math.cos(elapsed * speed * 2.6) * h * 0.07 * zoom;
+        const x = w * 0.5 + ax + bx;
+        const y = h * 0.5 + ay + by;
+
+        signalBloomTrail.push({ x, y, hue: (hue + signalBloomTrail.length * 1.5) % 360 });
+        if (signalBloomTrail.length > 180) signalBloomTrail.shift();
+
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        ctx.fillRect(0, 0, w, h);
+
+        const bloom = ctx.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, Math.max(w, h) * 0.55);
+        bloom.addColorStop(0, `hsla(${(hue + 18) % 360}, 100%, ${Math.min(18 + brightness * 10, 34)}%, 0.08)`);
+        bloom.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = bloom;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < signalBloomTrail.length; i++) {
+          const p = signalBloomTrail[i];
+          const life = i / signalBloomTrail.length;
+          const radius = Math.max(1.5, (h * 0.004 + life * h * 0.014) * zoom);
+          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius * 5);
+          grad.addColorStop(0, `hsla(${p.hue}, 100%, ${70 + life * 18}%, ${0.05 + life * 0.38})`);
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius * 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = `hsla(${(hue + 22) % 360}, 100%, 78%, 0.6)`;
+        ctx.lineWidth = Math.max(2, h * 0.004 * zoom);
+        ctx.strokeStyle = `hsla(${hue}, 100%, 78%, 0.45)`;
+        ctx.beginPath();
+        for (let i = 0; i < signalBloomTrail.length; i++) {
+          const p = signalBloomTrail[i];
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createBioPulsePreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Bio Pulse';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 26 * hueDrift) % 360;
+        const cell = Math.max(5, Math.floor(Math.min(w, h) / 64));
+        const cols = Math.ceil(w / cell);
+        const rows = Math.ceil(h / cell);
+
+        const bg = ctx.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, Math.max(w, h) * 0.74);
+        bg.addColorStop(0, `hsla(${(hue + 10) % 360}, 84%, ${Math.min(12 + brightness * 8, 28)}%, 1)`);
+        bg.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        for (let gy = 0; gy < rows; gy++) {
+          for (let gx = 0; gx < cols; gx++) {
+            const nx = gx / cols;
+            const ny = gy / rows;
+            const waveA = Math.sin((nx * 9.2 + elapsed * speed * 0.9) * Math.PI);
+            const waveB = Math.cos((ny * 8.1 - elapsed * speed * 1.15) * Math.PI);
+            const waveC = Math.sin(((nx + ny) * 6.7 + elapsed * speed * 0.75) * Math.PI);
+            const pulse = heartbeatPulse(elapsed * speed * 0.82 + nx * 0.3 + ny * 0.15);
+            const density = (waveA + waveB + waveC) / 3;
+            const mask = 0.5 + 0.5 * Math.sin((density * 2.9 + pulse * 3.5) * Math.PI);
+            const light = 18 + mask * 44 + pulse * 18;
+            const alpha = 0.12 + mask * 0.52;
+            const radius = cell * (0.25 + mask * 0.62) * zoom;
+            const x = gx * cell + cell * 0.5;
+            const y = gy * cell + cell * 0.5;
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, radius * 1.9);
+            grad.addColorStop(0, `hsla(${(hue + mask * 95 + pulse * 20) % 360}, 100%, ${Math.min(light, 82)}%, ${alpha})`);
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(x, y, radius * 1.9, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createQuantumDriftPreset() {
+      clearMedia();
+      quantumDriftParticles = [];
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Quantum Drift';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      const particleCount = 280;
+      for (let i = 0; i < particleCount; i++) {
+        quantumDriftParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: 0,
+          vy: 0,
+          seed: Math.random() * Math.PI * 2
+        });
+      }
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 30 * hueDrift) % 360;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < quantumDriftParticles.length; i++) {
+          const p = quantumDriftParticles[i];
+          const angle = Math.sin((p.x / w) * Math.PI * 4 + elapsed * speed + p.seed)
+            + Math.cos((p.y / h) * Math.PI * 3 - elapsed * speed * 1.3 + p.seed);
+          p.vx += Math.cos(angle) * 0.18 * zoom;
+          p.vy += Math.sin(angle) * 0.18 * zoom;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.93;
+          p.vy *= 0.93;
+          if (p.x < 0) p.x += w;
+          if (p.x > w) p.x -= w;
+          if (p.y < 0) p.y += h;
+          if (p.y > h) p.y -= h;
+
+          const radius = Math.max(1.2, h * 0.0026 * zoom);
+          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius * 5);
+          grad.addColorStop(0, `hsla(${(hue + i * 0.9) % 360}, 100%, ${Math.min(54 + brightness * 18, 84)}%, 0.28)`);
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius * 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createInfiniteMirrorPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const buffer = document.createElement('canvas');
+      const bctx = buffer.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Infinite Mirror';
+      resizePresetCanvas(canvas);
+      resizePresetCanvas(buffer);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+        if (buffer.width !== canvas.width || buffer.height !== canvas.height) {
+          buffer.width = canvas.width;
+          buffer.height = canvas.height;
+        }
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const minDim = Math.min(w, h);
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 38 * hueDrift) % 360;
+        const pulse = heartbeatPulse(elapsed * speed * 0.92);
+        const scale = 0.972 - pulse * 0.022;
+
+        bctx.clearRect(0, 0, w, h);
+        bctx.drawImage(canvas, 0, 0);
+
+        const bg = ctx.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, Math.max(w, h) * 0.72);
+        bg.addColorStop(0, `hsla(${(hue + 12) % 360}, 92%, ${Math.min(12 + brightness * 7, 24)}%, 0.2)`);
+        bg.addColorStop(1, 'rgba(0,0,0,0.16)');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.translate(w * 0.5, h * 0.5);
+        ctx.scale(scale, scale);
+        ctx.rotate(Math.sin(elapsed * speed * 0.35) * 0.015);
+        ctx.translate(-w * 0.5, -h * 0.5);
+        ctx.drawImage(buffer, 0, 0);
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 5; i++) {
+          const ring = minDim * (0.08 + i * 0.08 + pulse * 0.025) * zoom;
+          ctx.strokeStyle = `hsla(${(hue + i * 16) % 360}, 100%, ${66 + i * 4}%, ${0.16 - i * 0.02})`;
+          ctx.lineWidth = Math.max(1.5, minDim * 0.0032 * zoom * (1 - i * 0.08));
+          ctx.beginPath();
+          ctx.arc(w * 0.5, h * 0.5, ring, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        const core = ctx.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, minDim * 0.14 * zoom);
+        core.addColorStop(0, `hsla(${(hue + 24) % 360}, 100%, 88%, ${0.18 + pulse * 0.16})`);
+        core.addColorStop(0.55, `hsla(${(hue + 8) % 360}, 100%, 68%, 0.08)`);
+        core.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(w * 0.5, h * 0.5, minDim * 0.14 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function flameColumn(t, time) {
+      const core = Math.pow(Math.sin(Math.PI * t), 0.55);
+      const tongues = Math.sin(t * Math.PI * 5.2 + time * 2.4) * 0.14;
+      const whip = Math.sin(t * Math.PI * 13.4 - time * 3.7) * 0.05;
+      const burst = Math.max(0, Math.sin(t * Math.PI * 2.8 + time * 1.65 - 0.25)) * 0.2;
+      return Math.max(0, core + tongues + whip + burst);
+    }
+
+    function flameEnergy(t) {
+      const cycle = (t * 0.75) % 1;
+      const surge = gaussian(cycle, 0.18, 0.16) * 0.74;
+      const flash = gaussian(cycle, 0.54, 0.08) * 0.42;
+      const crack = gaussian(cycle, 0.78, 0.05) * 0.22;
+      return Math.min(1, surge + flash + crack);
+    }
+
+    function oceanSwell(t) {
+      const cycle = (t * 0.7) % 1;
+      const main = gaussian(cycle, 0.22, 0.16) * 0.7;
+      const follow = gaussian(cycle, 0.6, 0.22) * 0.45;
+      return Math.min(1, main + follow);
+    }
+
+    function heartbeatPulse(t) {
+      const cycle = t % 1;
+      const main = gaussian(cycle, 0.18, 0.028) * 1.0;
+      const second = gaussian(cycle, 0.31, 0.02) * 0.72;
+      const tail = gaussian(cycle, 0.52, 0.08) * 0.18;
+      return Math.min(1, main + second + tail);
+    }
+
+    function heartbeatShape(phase) {
+      return (
+        -0.05 * gaussian(phase, 0.14, 0.02) +
+         0.12 * gaussian(phase, 0.17, 0.012) +
+        -1.18 * gaussian(phase, 0.2, 0.008) +
+         2.45 * gaussian(phase, 0.225, 0.01) +
+        -0.65 * gaussian(phase, 0.255, 0.012) +
+         0.48 * gaussian(phase, 0.34, 0.038)
+      );
+    }
+
+    function gaussian(x, mean, spread) {
+      const d = (x - mean) / spread;
+      return Math.exp(-0.5 * d * d);
+    }
+
+    function fract(n) {
+      return n - Math.floor(n);
+    }
+
+    function drawHeart(ctx, x, y, size) {
+      ctx.beginPath();
+      ctx.moveTo(x, y + size * 0.24);
+      ctx.bezierCurveTo(x, y - size * 0.12, x - size * 0.5, y - size * 0.12, x - size * 0.5, y + size * 0.2);
+      ctx.bezierCurveTo(x - size * 0.5, y + size * 0.48, x - size * 0.14, y + size * 0.7, x, y + size);
+      ctx.bezierCurveTo(x + size * 0.14, y + size * 0.7, x + size * 0.5, y + size * 0.48, x + size * 0.5, y + size * 0.2);
+      ctx.bezierCurveTo(x + size * 0.5, y - size * 0.12, x, y - size * 0.12, x, y + size * 0.24);
+      ctx.fill();
+    }
+
+
+    function createFractalCollapseSpiralPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Fractal Collapse Spiral';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const zoom = Number(zoomRange.value);
+        const brightness = Number(brightnessRange.value) / 100;
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hueBase = (accentHue + elapsed * 54 * hueDrift) % 360;
+        const cx = w * 0.5;
+        const cy = h * 0.5;
+        const maxR = Math.min(w, h) * 0.44 * zoom;
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = `rgba(0, 0, 0, ${Math.min(0.24 + speed * 0.05, 0.45)})`;
+        ctx.fillRect(0, 0, w, h);
+
+        for (let i = 0; i < 190; i++) {
+          const n = i / 189;
+          const radius = maxR * Math.pow(n, 0.82);
+          const angle = elapsed * (0.8 + speed * 0.5) + n * 24 + Math.sin(elapsed * 0.7 + n * 11) * 0.9;
+          const petals = 2.4 + Math.sin(elapsed * 0.6 + n * 8) * 0.8;
+          const warp = radius * (0.35 + 0.65 * Math.abs(Math.sin(angle * petals)));
+          const x = cx + Math.cos(angle) * warp;
+          const y = cy + Math.sin(angle) * warp;
+          const alpha = 0.15 + (1 - n) * 0.6;
+          const size = Math.max(1.4, (1 - n) * 11 * brightness);
+          const hue = (hueBase + n * 160 + elapsed * 18) % 360;
+
+          ctx.beginPath();
+          ctx.fillStyle = `hsla(${hue}, 100%, ${55 + (1 - n) * 24}%, ${alpha})`;
+          ctx.shadowBlur = size * 2.4;
+          ctx.shadowColor = `hsla(${hue}, 100%, 70%, ${alpha})`;
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = `hsla(${(hueBase + 40) % 360}, 100%, 76%, 0.32)`;
+        ctx.lineWidth = Math.max(1.5, h * 0.0022);
+        for (let ring = 0; ring < 5; ring++) {
+          const rr = maxR * (0.2 + ring * 0.16 + Math.sin(elapsed * 0.6 + ring) * 0.01);
+          ctx.beginPath();
+          for (let a = 0; a <= Math.PI * 2 + 0.05; a += 0.06) {
+            const pulse = 1 + 0.12 * Math.sin(a * 7 + elapsed * (1.4 + ring * 0.1));
+            const px = cx + Math.cos(a) * rr * pulse;
+            const py = cy + Math.sin(a) * rr * pulse;
+            if (a === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createSignalBloomOrbitPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Signal Bloom Orbit';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      signalBloomOrbitSeeds = [];
+      for (let i = 0; i < 7; i++) {
+        signalBloomOrbitSeeds.push({
+          phase: i * 0.8,
+          radius: 0.16 + i * 0.055,
+          speed: 0.6 + i * 0.16,
+          tilt: 1.1 + i * 0.18
+        });
+      }
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Number(zoomRange.value);
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hueBase = (accentHue + elapsed * 40 * hueDrift) % 360;
+        const cx = w * 0.5;
+        const cy = h * 0.5;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.16)';
+        ctx.fillRect(0, 0, w, h);
+
+        for (let i = 0; i < signalBloomOrbitSeeds.length; i++) {
+          const seed = signalBloomOrbitSeeds[i];
+          const orbitR = Math.min(w, h) * seed.radius * zoom;
+          const angle = elapsed * speed * seed.speed + seed.phase;
+          const x = cx + Math.cos(angle * seed.tilt) * orbitR;
+          const y = cy + Math.sin(angle) * orbitR * 0.74;
+          const flare = 0.55 + 0.45 * Math.sin(angle * 2.2 + i);
+          const size = Math.max(7, h * 0.016 * brightness + flare * h * 0.02);
+          const hue = (hueBase + i * 28 + elapsed * 20) % 360;
+
+          const grad = ctx.createRadialGradient(x, y, 0, x, y, size * 3.2);
+          grad.addColorStop(0, `hsla(${hue}, 100%, 78%, 0.95)`);
+          grad.addColorStop(0.25, `hsla(${(hue + 12) % 360}, 100%, 64%, 0.48)`);
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(x, y, size * 3.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = `hsla(${hue}, 100%, 75%, 0.16)`;
+          ctx.lineWidth = Math.max(1.2, h * 0.0018);
+          ctx.beginPath();
+          for (let a = 0; a <= Math.PI * 2 + 0.05; a += 0.12) {
+            const px = cx + Math.cos(a * seed.tilt) * orbitR;
+            const py = cy + Math.sin(a) * orbitR * 0.74;
+            if (a === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+
+        const starGrad = ctx.createRadialGradient(cx, cy, h * 0.01, cx, cy, Math.min(w, h) * 0.28 * zoom);
+        starGrad.addColorStop(0, `hsla(${(hueBase + 30) % 360}, 100%, 82%, 0.26)`);
+        starGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = starGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, Math.min(w, h) * 0.28 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createBioPulseCellsPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Bio Pulse Cells';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      bioPulseCells = [];
+      const count = 34;
+      for (let i = 0; i < count; i++) {
+        bioPulseCells.push({
+          x: Math.random(),
+          y: Math.random(),
+          r: 0.03 + Math.random() * 0.06,
+          phase: Math.random() * Math.PI * 2,
+          dx: (Math.random() - 0.5) * 0.0008,
+          dy: (Math.random() - 0.5) * 0.0008
+        });
+      }
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hueBase = (accentHue + elapsed * 26 * hueDrift) % 360;
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = `hsla(${(hueBase + 14) % 360}, 48%, 6%, 0.68)`;
+        ctx.fillRect(0, 0, w, h);
+
+        for (let i = 0; i < bioPulseCells.length; i++) {
+          const cell = bioPulseCells[i];
+          cell.x += cell.dx * speed;
+          cell.y += cell.dy * speed;
+          if (cell.x < -0.1) cell.x = 1.1;
+          if (cell.x > 1.1) cell.x = -0.1;
+          if (cell.y < -0.1) cell.y = 1.1;
+          if (cell.y > 1.1) cell.y = -0.1;
+
+          const pulse = 0.55 + 0.45 * Math.sin(elapsed * (2.1 + i * 0.06) + cell.phase);
+          const x = cell.x * w;
+          const y = cell.y * h;
+          const r = cell.r * Math.min(w, h) * (0.8 + pulse * 0.65) * brightness;
+          const hue = (hueBase + i * 7 + pulse * 45) % 360;
+
+          const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+          grad.addColorStop(0, `hsla(${hue}, 100%, 78%, 0.78)`);
+          grad.addColorStop(0.45, `hsla(${(hue + 18) % 360}, 88%, 52%, 0.34)`);
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < bioPulseCells.length; i++) {
+          for (let j = i + 1; j < bioPulseCells.length; j++) {
+            const a = bioPulseCells[i];
+            const b = bioPulseCells[j];
+            const ax = a.x * w;
+            const ay = a.y * h;
+            const bx = b.x * w;
+            const by = b.y * h;
+            const dx = ax - bx;
+            const dy = ay - by;
+            const dist = Math.hypot(dx, dy);
+            const limit = Math.min(w, h) * 0.16;
+            if (dist < limit) {
+              const alpha = (1 - dist / limit) * 0.12;
+              ctx.strokeStyle = `hsla(${(hueBase + i * 8) % 360}, 100%, 72%, ${alpha})`;
+              ctx.lineWidth = Math.max(1, limit * 0.01);
+              ctx.beginPath();
+              ctx.moveTo(ax, ay);
+              ctx.lineTo(bx, by);
+              ctx.stroke();
+            }
+          }
+        }
+        ctx.globalCompositeOperation = 'source-over';
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createQuantumDriftRibbonsPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Quantum Drift Ribbons';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      quantumRibbonParticles = [];
+      for (let i = 0; i < 14; i++) {
+        quantumRibbonParticles.push({
+          phase: Math.random() * Math.PI * 2,
+          lane: i / 13,
+          depth: 0.2 + Math.random() * 0.8
+        });
+      }
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const zoom = Number(zoomRange.value);
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hueBase = (accentHue + elapsed * 38 * hueDrift) % 360;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = 'lighter';
+
+        quantumRibbonParticles.forEach((rib, idx) => {
+          const baseY = h * (0.12 + rib.lane * 0.76);
+          const amp = h * (0.04 + rib.depth * 0.06) * zoom;
+          const freq = 1.4 + rib.depth * 1.8;
+          const hue = (hueBase + idx * 17 + elapsed * 22) % 360;
+          ctx.strokeStyle = `hsla(${hue}, 100%, ${58 + rib.depth * 18}%, ${0.14 + rib.depth * 0.14})`;
+          ctx.lineWidth = Math.max(2, h * 0.0025 * (0.8 + rib.depth));
+          ctx.beginPath();
+          for (let x = 0; x <= w; x += 8) {
+            const t = x / w;
+            const y = baseY
+              + Math.sin(t * Math.PI * 2 * freq + elapsed * speed * (1.1 + rib.depth) + rib.phase) * amp
+              + Math.cos(t * Math.PI * 6 + elapsed * 0.8 + rib.phase) * amp * 0.24;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        });
+        ctx.globalCompositeOperation = 'source-over';
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createInfiniteMirrorTunnelPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Infinite Mirror Tunnel';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      mirrorTunnelStars = [];
+      for (let i = 0; i < 180; i++) {
+        mirrorTunnelStars.push({
+          angle: Math.random() * Math.PI * 2,
+          radius: Math.random(),
+          size: Math.random(),
+          speed: 0.15 + Math.random() * 0.85
+        });
+      }
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const zoom = Number(zoomRange.value);
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hueBase = (accentHue + elapsed * 34 * hueDrift) % 360;
+        const cx = w * 0.5;
+        const cy = h * 0.5;
+        const maxR = Math.min(w, h) * 0.48 * zoom;
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.fillRect(0, 0, w, h);
+
+        mirrorTunnelStars.forEach((star, idx) => {
+          star.radius += 0.0045 * speed * star.speed;
+          if (star.radius > 1) {
+            star.radius = 0.02;
+            star.angle = Math.random() * Math.PI * 2;
+          }
+          const r = Math.pow(star.radius, 1.9) * maxR;
+          const x = cx + Math.cos(star.angle + elapsed * 0.22) * r;
+          const y = cy + Math.sin(star.angle + elapsed * 0.22) * r;
+          const hue = (hueBase + idx * 2 + star.radius * 120) % 360;
+          const size = Math.max(1.2, star.size * 3.5 + star.radius * 8 * brightness);
+          ctx.fillStyle = `hsla(${hue}, 100%, ${65 + star.radius * 20}%, ${0.15 + star.radius * 0.78})`;
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        for (let i = 0; i < 8; i++) {
+          const ring = ((elapsed * speed * 0.34) + i / 8) % 1;
+          const rr = Math.pow(ring, 1.6) * maxR;
+          const alpha = 0.26 * (1 - ring);
+          ctx.strokeStyle = `hsla(${(hueBase + i * 20) % 360}, 100%, 75%, ${alpha})`;
+          ctx.lineWidth = Math.max(1.2, h * 0.0022 * (1 - ring));
+          ctx.beginPath();
+          ctx.arc(cx, cy, rr, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+
+    function createFractalPulsePreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Fractal Pulse';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const minDim = Math.min(w, h);
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 42 * hueDrift) % 360;
+        const pulse = 0.5 + 0.5 * Math.sin(elapsed * speed * 2.1);
+
+        const bg = ctx.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, minDim * 0.75);
+        bg.addColorStop(0, `hsla(${(hue + 18) % 360}, 85%, ${Math.min(14 + brightness * 7, 26)}%, 1)`);
+        bg.addColorStop(0.55, `hsla(${(hue + 300) % 360}, 90%, 7%, 1)`);
+        bg.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.translate(w * 0.5, h * 0.5);
+        ctx.globalCompositeOperation = 'screen';
+
+        const arms = 8;
+        for (let arm = 0; arm < arms; arm++) {
+          ctx.save();
+          ctx.rotate((Math.PI * 2 * arm) / arms + elapsed * speed * 0.18);
+          ctx.beginPath();
+          for (let i = 0; i <= 180; i++) {
+            const n = i / 180;
+            const angle = n * Math.PI * 4.5;
+            const radius = (minDim * 0.05 + n * minDim * 0.32) * zoom * (0.82 + pulse * 0.45 + Math.sin(n * 16 - elapsed * speed * 1.8) * 0.06);
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius * 0.42;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.lineWidth = Math.max(1.4, minDim * 0.0028 * zoom);
+          ctx.strokeStyle = `hsla(${(hue + arm * 18 + pulse * 90) % 360}, 100%, ${60 + pulse * 20}%, 0.36)`;
+          ctx.shadowBlur = 16;
+          ctx.shadowColor = `hsla(${(hue + arm * 18 + 26) % 360}, 100%, 75%, 0.42)`;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        for (let ring = 0; ring < 5; ring++) {
+          const r = minDim * (0.08 + ring * 0.07) * zoom * (0.95 + pulse * 0.12);
+          ctx.lineWidth = Math.max(1, minDim * 0.002 * zoom);
+          ctx.strokeStyle = `hsla(${(hue + ring * 24 + 40) % 360}, 100%, ${55 + ring * 6}%, ${0.08 + ring * 0.03})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createSignalWeavePreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Signal Weave';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 56 * hueDrift) % 360;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.16)';
+        ctx.fillRect(0, 0, w, h);
+
+        const lineCount = 11;
+        const points = 84;
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.lineCap = 'round';
+        for (let row = 0; row < lineCount; row++) {
+          const yBase = h * (0.16 + row * 0.064);
+          ctx.beginPath();
+          for (let i = 0; i < points; i++) {
+            const n = i / (points - 1);
+            const x = n * w;
+            const weaveA = Math.sin(n * Math.PI * (4.2 + row * 0.14) + elapsed * speed * (1.2 + row * 0.07));
+            const weaveB = Math.cos(n * Math.PI * (8.4 - row * 0.22) - elapsed * speed * 1.75 + row * 0.48);
+            const y = yBase + (weaveA * h * 0.036 + weaveB * h * 0.02) * zoom;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.lineWidth = Math.max(1.1, h * 0.0022 * zoom);
+          ctx.strokeStyle = `hsla(${(hue + row * 12) % 360}, 100%, ${48 + brightness * 0.14 + row * 2.1}%, ${0.18 + row * 0.022})`;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = `hsla(${(hue + row * 12 + 18) % 360}, 100%, 72%, 0.22)`;
+          ctx.stroke();
+        }
+
+        for (let col = 0; col < 16; col++) {
+          const x = w * (col + 0.5) / 16;
+          const ySwing = Math.sin(elapsed * speed * 1.7 + col * 0.45) * h * 0.06 * zoom;
+          ctx.strokeStyle = `hsla(${(hue + 180 + col * 8) % 360}, 100%, 68%, 0.08)`;
+          ctx.lineWidth = Math.max(1, w * 0.0012);
+          ctx.beginPath();
+          ctx.moveTo(x, h * 0.14 + ySwing);
+          ctx.lineTo(x, h * 0.86 - ySwing);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createBioLatticePreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Bio Lattice';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const minDim = Math.min(w, h);
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 38 * hueDrift) % 360;
+        const cell = Math.max(14, minDim * 0.06 / zoom);
+        const cols = Math.ceil(w / cell) + 1;
+        const rows = Math.ceil(h / cell) + 1;
+
+        const bg = ctx.createLinearGradient(0, 0, w, h);
+        bg.addColorStop(0, `hsla(${(hue + 148) % 360}, 90%, ${Math.min(9 + brightness * 0.08, 18)}%, 1)`);
+        bg.addColorStop(1, `hsla(${(hue + 240) % 360}, 90%, 4%, 1)`);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.translate(-cell * 0.25, -cell * 0.25);
+        for (let gy = 0; gy < rows; gy++) {
+          for (let gx = 0; gx < cols; gx++) {
+            const x = gx * cell;
+            const y = gy * cell;
+            const wave = Math.sin(gx * 0.72 + elapsed * speed * 1.3) + Math.cos(gy * 0.64 - elapsed * speed * 1.5);
+            const pulse = 0.5 + 0.5 * Math.sin(wave + elapsed * speed * 0.75);
+            const size = cell * (0.22 + pulse * 0.54);
+            const rot = wave * 0.18 + elapsed * speed * 0.05;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rot);
+            ctx.fillStyle = `hsla(${(hue + gx * 6 + gy * 4 + pulse * 70) % 360}, 100%, ${44 + pulse * 28}%, ${0.22 + pulse * 0.34})`;
+            ctx.strokeStyle = `hsla(${(hue + 120 + gx * 3) % 360}, 100%, 78%, ${0.06 + pulse * 0.16})`;
+            ctx.lineWidth = Math.max(1, minDim * 0.0016);
+            ctx.beginPath();
+            ctx.roundRect(-size * 0.5, -size * 0.5, size, size, size * 0.22);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createQuantumTunnelPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Quantum Tunnel';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const minDim = Math.min(w, h);
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 62 * hueDrift) % 360;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.translate(w * 0.5, h * 0.5);
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 260; i++) {
+          const depth = i / 260;
+          const spiral = elapsed * speed * 1.8 + depth * 18;
+          const radius = depth * minDim * 0.44 * zoom * (1 + 0.08 * Math.sin(elapsed * speed * 2 + depth * 20));
+          const x = Math.cos(spiral) * radius;
+          const y = Math.sin(spiral) * radius;
+          const size = Math.max(1.2, (1 - depth) * 6.4 * zoom);
+          ctx.fillStyle = `hsla(${(hue + depth * 180 + elapsed * 14) % 360}, 100%, ${58 + (1 - depth) * 26 + brightness * 0.06}%, ${0.08 + (1 - depth) * 0.42})`;
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        for (let ring = 0; ring < 12; ring++) {
+          const n = ring / 12;
+          const r = minDim * (0.06 + n * 0.34) * zoom * (1 + Math.sin(elapsed * speed * 2.3 - n * 10) * 0.04);
+          ctx.strokeStyle = `hsla(${(hue + 220 + ring * 10) % 360}, 100%, 70%, ${0.03 + (1 - n) * 0.06})`;
+          ctx.lineWidth = Math.max(1, minDim * 0.0016);
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+    function createMirrorShatterPreset() {
+      clearMedia();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      currentElement = canvas;
+      currentType = 'preset';
+      mediaWrap.appendChild(canvas);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = 'Preset: Mirror Shatter';
+      resizePresetCanvas(canvas);
+      applyVisualState();
+
+      presetStartTime = performance.now();
+
+      function draw(now) {
+        if (currentElement !== canvas || currentType !== 'preset') return;
+
+        const elapsed = (now - presetStartTime) / 1000;
+        const w = canvas.width;
+        const h = canvas.height;
+        const minDim = Math.min(w, h);
+        const brightness = Number(brightnessRange.value) / 100;
+        const zoom = Math.max(0.25, Number(zoomRange.value));
+        const speed = Math.max(0.2, Number(speedRange.value));
+        const hueDrift = Number(presetHueSpeedRange.value);
+        const accentHue = Number(hexToHsl(presetAccentColor.value).h);
+        const hue = (accentHue + elapsed * 46 * hueDrift) % 360;
+
+        const off = document.createElement('canvas');
+        off.width = w;
+        off.height = h;
+        const octx = off.getContext('2d');
+        octx.drawImage(canvas, 0, 0);
+
+        const bg = ctx.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, minDim * 0.75);
+        bg.addColorStop(0, `hsla(${(hue + 12) % 360}, 90%, ${Math.min(11 + brightness * 0.08, 18)}%, 0.28)`);
+        bg.addColorStop(1, 'rgba(0,0,0,0.28)');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.save();
+        ctx.translate(w * 0.5, h * 0.5);
+        ctx.globalCompositeOperation = 'screen';
+        const shards = 7;
+        for (let i = 0; i < shards; i++) {
+          const start = (Math.PI * 2 * i) / shards + elapsed * speed * 0.08;
+          const end = start + Math.PI * (0.26 + 0.02 * Math.sin(elapsed * speed + i));
+          const scale = 0.86 - i * 0.06 + Math.sin(elapsed * speed * 1.5 + i * 0.8) * 0.02;
+          ctx.save();
+          ctx.rotate(Math.sin(elapsed * speed * 0.55 + i) * 0.2 + i * 0.05);
+          ctx.scale(scale * zoom, scale * zoom);
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, minDim * 0.72, start, end);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(off, -w * 0.5, -h * 0.5, w, h);
+          ctx.restore();
+
+          ctx.save();
+          ctx.rotate(i * 0.18 - elapsed * speed * 0.06);
+          ctx.strokeStyle = `hsla(${(hue + i * 26) % 360}, 100%, 72%, 0.14)`;
+          ctx.lineWidth = Math.max(1, minDim * 0.0022);
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos((start + end) * 0.5) * minDim * 0.68, Math.sin((start + end) * 0.5) * minDim * 0.68);
+          ctx.stroke();
+          ctx.restore();
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (let ring = 0; ring < 4; ring++) {
+          const r = minDim * (0.08 + ring * 0.08) * zoom;
+          ctx.strokeStyle = `hsla(${(hue + 40 + ring * 20) % 360}, 100%, 70%, ${0.06 + ring * 0.03})`;
+          ctx.lineWidth = Math.max(1, minDim * 0.0016);
+          ctx.beginPath();
+          ctx.arc(w * 0.5, h * 0.5, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        presetAnimationFrame = requestAnimationFrame(draw);
+      }
+
+      presetAnimationFrame = requestAnimationFrame(draw);
+    }
+
+
+    function hexToHsl(hex) {
+      let r = 0, g = 0, b = 0;
+      const normalized = hex.replace('#', '');
+      if (normalized.length === 3) {
+        r = parseInt(normalized[0] + normalized[0], 16) / 255;
+        g = parseInt(normalized[1] + normalized[1], 16) / 255;
+        b = parseInt(normalized[2] + normalized[2], 16) / 255;
+      } else {
+        r = parseInt(normalized.slice(0, 2), 16) / 255;
+        g = parseInt(normalized.slice(2, 4), 16) / 255;
+        b = parseInt(normalized.slice(4, 6), 16) / 255;
+      }
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s;
+      const l = (max + min) / 2;
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          default: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h: h * 360, s, l };
+    }
+
+    function loadSelectedPreset() {
+      if (presetSelect.value === 'heartbeat') {
+        createHeartbeatPreset();
+      } else if (presetSelect.value === 'oceanBreak') {
+        createOceanBreakPreset();
+      } else if (presetSelect.value === 'intensiveFlame') {
+        createIntensiveFlamePreset();
+      } else if (presetSelect.value === 'fractalSink') {
+        createFractalSinkPreset();
+      } else if (presetSelect.value === 'hyperJumpSpaceship') {
+        createHyperJumpSpaceshipPreset();
+      } else if (presetSelect.value === 'fractalCollapse') {
+        createFractalCollapsePreset();
+      } else if (presetSelect.value === 'signalBloom') {
+        createSignalBloomPreset();
+      } else if (presetSelect.value === 'bioPulse') {
+        createBioPulsePreset();
+      } else if (presetSelect.value === 'quantumDrift') {
+        createQuantumDriftPreset();
+      } else if (presetSelect.value === 'infiniteMirror') {
+        createInfiniteMirrorPreset();
+      } else if (presetSelect.value === 'fractalCollapseSpiral') {
+        createFractalCollapseSpiralPreset();
+      } else if (presetSelect.value === 'signalBloomOrbit') {
+        createSignalBloomOrbitPreset();
+      } else if (presetSelect.value === 'bioPulseCells') {
+        createBioPulseCellsPreset();
+      } else if (presetSelect.value === 'quantumDriftRibbons') {
+        createQuantumDriftRibbonsPreset();
+      } else if (presetSelect.value === 'infiniteMirrorTunnel') {
+        createInfiniteMirrorTunnelPreset();
+      } else if (presetSelect.value === 'fractalPulse') {
+        createFractalPulsePreset();
+      } else if (presetSelect.value === 'signalWeave') {
+        createSignalWeavePreset();
+      } else if (presetSelect.value === 'bioLattice') {
+        createBioLatticePreset();
+      } else if (presetSelect.value === 'quantumTunnel') {
+        createQuantumTunnelPreset();
+      } else if (presetSelect.value === 'mirrorShatter') {
+        createMirrorShatterPreset();
+      }
+    }
+
+    function syncSourceModeUI() {
+      const presetMode = sourceMode.value === 'preset';
+      uploadSourceUI.classList.toggle('hidden', presetMode);
+      presetSourceUI.classList.toggle('hidden', !presetMode);
+
+      if (presetMode) {
+        loadSelectedPreset();
+      } else if (currentType === 'preset') {
+        clearMedia();
+      }
+    }
+
+    function loadFile(file) {
+      if (!file) return;
+      sourceMode.value = 'upload';
+      uploadSourceUI.classList.remove('hidden');
+      presetSourceUI.classList.add('hidden');
+      const gif = isGif(file);
+      const video = isVideo(file);
+
+      if (!gif && !video) {
+        alert('Please load a GIF or a video file.');
+        return;
+      }
+
+      clearMedia();
+      currentUrl = URL.createObjectURL(file);
+      currentType = gif ? 'gif' : 'video';
+
+      if (gif) {
+        const img = document.createElement('img');
+        img.src = currentUrl;
+        img.alt = file.name;
+        currentElement = img;
+      } else {
+        const vid = document.createElement('video');
+        vid.src = currentUrl;
+        vid.playsInline = true;
+        vid.preload = 'auto';
+        currentElement = vid;
+      }
+
+      mediaWrap.appendChild(currentElement);
+      placeholder.classList.add('hidden');
+      fileBadge.textContent = file.name;
+
+      applyVisualState();
+      applyPlaybackState();
+
+      if (currentType === 'video' && autoplayToggle.checked) {
+        safePlay();
+      }
+    }
+
+    function togglePlayPause() {
+      if (!currentElement) return;
+      if (currentElement.tagName === 'VIDEO') {
+        if (currentElement.paused) currentElement.play();
+        else currentElement.pause();
+      } else if (currentType === 'preset') {
+        if (presetAnimationFrame) {
+          stopPresetAnimation();
+        } else {
+          presetStartTime = performance.now();
+          loadSelectedPreset();
+        }
+      }
+    }
+
+    function restartMedia() {
+      if (!currentElement) return;
+      if (currentElement.tagName === 'VIDEO') {
+        currentElement.currentTime = 0;
+        if (autoplayToggle.checked || !currentElement.paused) currentElement.play();
+      } else if (currentType === 'gif') {
+        const src = currentElement.src;
+        currentElement.src = '';
+        requestAnimationFrame(() => {
+          currentElement.src = src;
+        });
+      } else if (currentType === 'preset') {
+        loadSelectedPreset();
+      }
+    }
+
+    async function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        try {
+          await stage.requestFullscreen();
+        } catch (err) {
+          console.warn('Fullscreen failed.', err);
+        }
+      } else {
+        await document.exitFullscreen();
+      }
+    }
+
+    fileInput.addEventListener('change', e => loadFile(e.target.files[0]));
+    sourceMode.addEventListener('change', syncSourceModeUI);
+    presetSelect.addEventListener('change', loadSelectedPreset);
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    dropzone.addEventListener('drop', e => {
+      const file = e.dataTransfer.files?.[0];
+      loadFile(file);
+    });
+
+    loopToggle.addEventListener('change', applyPlaybackState);
+    muteToggle.addEventListener('change', applyPlaybackState);
+    speedRange.addEventListener('input', () => {
+      speedOut.textContent = `${Number(speedRange.value).toFixed(2)}x`;
+      applyPlaybackState();
+    });
+
+    fitMode.addEventListener('change', applyVisualState);
+    zoomRange.addEventListener('input', () => {
+      zoomOut.textContent = `${Number(zoomRange.value).toFixed(2)}x`;
+      applyVisualState();
+    });
+    brightnessRange.addEventListener('input', () => {
+      brightnessOut.textContent = `${brightnessRange.value}%`;
+      applyVisualState();
+    });
+    bgColor.addEventListener('input', applyVisualState);
+    presetHueSpeedRange.addEventListener('input', () => {
+      presetHueSpeedOut.textContent = `${Number(presetHueSpeedRange.value).toFixed(2)}x`;
+    });
+    presetAccentColor.addEventListener('input', () => {
+      if (currentType === 'preset') loadSelectedPreset();
+    });
+
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    miniFullscreen.addEventListener('click', toggleFullscreen);
+    playPauseBtn.addEventListener('click', togglePlayPause);
+    miniPlayPause.addEventListener('click', togglePlayPause);
+    restartBtn.addEventListener('click', restartMedia);
+    clearBtn.addEventListener('click', () => {
+      clearMedia();
+      fileInput.value = '';
+    });
+
+    window.addEventListener('beforeunload', revokeCurrentUrl);
+    window.addEventListener('resize', () => {
+      if (currentType === 'preset' && currentElement?.tagName === 'CANVAS') {
+        resizePresetCanvas(currentElement);
+      }
+    });
+    speedOut.textContent = `${Number(speedRange.value).toFixed(2)}x`;
+    zoomOut.textContent = `${Number(zoomRange.value).toFixed(2)}x`;
+    brightnessOut.textContent = `${brightnessRange.value}%`;
+    presetHueSpeedOut.textContent = `${Number(presetHueSpeedRange.value).toFixed(2)}x`;
+    stage.style.background = bgColor.value;
+    syncSourceModeUI();
+
+  </script>
+</body>
+</html>
