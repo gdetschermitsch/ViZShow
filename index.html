@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>VizShow ©</title>
   <link rel="icon" type="image/x-icon" href="./ViZShow.ico" />
   <style>
@@ -322,6 +325,79 @@
       background: rgba(0,0,0,.45);
     }
 
+
+
+    .tap-to-start {
+      position: absolute;
+      inset: 0;
+      z-index: 9;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(0,0,0,.38);
+      backdrop-filter: blur(5px);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .tap-to-start-card {
+      max-width: 360px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(10,12,18,.78);
+      border-radius: 20px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+    }
+
+    .tap-to-start-card strong {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--text);
+      font-size: 1.05rem;
+    }
+
+    .tap-to-start-card span {
+      display: block;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.35;
+    }
+
+    body.viz-immersive {
+      overflow: hidden;
+      background: #000;
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+
+    body.viz-immersive .app {
+      display: block;
+      height: 100dvh;
+      width: 100vw;
+      padding: 0;
+    }
+
+    body.viz-immersive .sidebar {
+      display: none;
+    }
+
+    body.viz-immersive .stage {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      width: 100vw;
+      height: 100dvh;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    @supports not (height: 100dvh) {
+      body.viz-immersive .app,
+      body.viz-immersive .stage { height: 100vh; }
+    }
+
     .hidden { display: none !important; }
 
     @media (max-width: 980px) {
@@ -351,6 +427,171 @@
         min-height: 58vh;
       }
     }
+
+    /* Mobile browser build: preserve desktop preset rendering; only adapt shell/UI. */
+    @media (max-width: 980px) {
+      html, body {
+        height: 100%;
+        min-height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: manipulation;
+      }
+
+      .app,
+      .app.sidebar-collapsed {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: 0;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .stage {
+        order: 1;
+        min-height: 0;
+        height: 100%;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .sidebar {
+        order: 2;
+        position: fixed;
+        left: max(10px, env(safe-area-inset-left));
+        right: max(10px, env(safe-area-inset-right));
+        bottom: max(10px, env(safe-area-inset-bottom));
+        z-index: 20;
+        max-height: min(58vh, 520px);
+        padding: 10px;
+        border-radius: 20px;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        transition: transform .22s ease, max-height .22s ease, padding .22s ease;
+      }
+
+      .sidebar-toggle {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        min-height: 44px;
+        width: 100%;
+        border-radius: 14px;
+        padding: 11px 12px;
+        touch-action: manipulation;
+      }
+
+      .sidebar-body {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-top: 10px;
+      }
+
+      .app.mobile-controls-collapsed .sidebar {
+        max-height: 64px;
+        overflow: hidden;
+        padding: 10px;
+      }
+
+      .app.mobile-controls-collapsed .sidebar-body {
+        display: none;
+      }
+
+      .brand-title {
+        width: min(74vw, 260px);
+      }
+
+      .sub {
+        font-size: .86rem;
+      }
+
+      .group {
+        padding: 11px;
+        border-radius: 14px;
+      }
+
+      .group h2 {
+        margin-bottom: 9px;
+      }
+
+      .row {
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      select, button {
+        min-height: 44px;
+        font-size: 16px;
+      }
+
+      input[type="range"] {
+        min-height: 34px;
+      }
+
+      input[type="color"] {
+        min-height: 44px;
+      }
+
+      .dropzone {
+        padding: 13px;
+      }
+
+      .dropzone span {
+        font-size: .84rem;
+      }
+
+      .hud {
+        left: max(10px, env(safe-area-inset-left));
+        right: max(10px, env(safe-area-inset-right));
+        top: max(10px, env(safe-area-inset-top));
+        bottom: auto;
+        align-items: flex-start;
+      }
+
+      .badge {
+        max-width: 52vw;
+        font-size: .78rem;
+        padding: 8px 10px;
+      }
+
+      .mini-controls {
+        flex-direction: column;
+        align-items: flex-end;
+      }
+
+      .mini-controls button {
+        min-height: 40px;
+        padding: 8px 10px;
+        font-size: .82rem;
+      }
+
+      .media-wrap img,
+      .media-wrap video,
+      .media-wrap canvas {
+        box-shadow: none;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .sidebar {
+        max-height: min(62vh, 560px);
+      }
+      .mini-controls button {
+        font-size: .78rem;
+      }
+      .badge {
+        max-width: 48vw;
+      }
+    }
+
 	/* Scrollbars themed to match VizShow */
 * {
   scrollbar-width: thin;
@@ -390,7 +631,7 @@
       <div class="sidebar-body" id="sidebarBody">
         <div>
           <img class="brand-title" src="./ViZShowTitle.png" alt="VizShow ©" />
-          <p class="sub">Load a GIF or video, loop it, scale it, and use it as a fullscreen visualizer.</p>
+          <p class="sub">-                      -</p>
         </div>
 
       <div class="group">
@@ -509,9 +750,14 @@
     <main class="panel stage" id="stage">
       <div class="media-wrap" id="mediaWrap"></div>
       <div class="placeholder" id="placeholder">
-        <strong>No visual source loaded</strong>
-        Load a GIF or video, or switch to a preset visualizer source.
+        <strong>                 </strong>
       </div>
+      <button class="tap-to-start hidden" id="tapToStart" type="button" aria-label="Start video playback">
+        <span class="tap-to-start-card">
+          <strong>Tap to start video</strong>
+          <span>Mobile browsers sometimes block autoplay until a direct touch. This starts the loaded video immediately.</span>
+        </span>
+      </button>
       <div class="hud">
         <div class="badge" id="fileBadge">Ready</div>
         <div class="mini-controls">
@@ -557,6 +803,7 @@ const appShell = document.getElementById('appShell');
     const clearBtn = document.getElementById('clearBtn');
     const miniPlayPause = document.getElementById('miniPlayPause');
     const miniFullscreen = document.getElementById('miniFullscreen');
+    const tapToStart = document.getElementById('tapToStart');
 
     let currentElement = null;
     let currentUrl = null;
@@ -573,16 +820,22 @@ const appShell = document.getElementById('appShell');
 
 
     function syncSidebarToggleUI() {
-      const collapsed = appShell.classList.contains('sidebar-collapsed');
-      sidebarToggle.textContent = collapsed ? '⟩' : '⟨';
+      const isMobile = window.innerWidth <= 980;
+      const collapsed = isMobile
+        ? appShell.classList.contains('mobile-controls-collapsed')
+        : appShell.classList.contains('sidebar-collapsed');
+      sidebarToggle.textContent = isMobile ? (collapsed ? 'Controls ▲' : 'Controls ▼') : (collapsed ? '⟩' : '⟨');
       sidebarToggle.setAttribute('aria-expanded', String(!collapsed));
-      sidebarToggle.setAttribute('aria-label', collapsed ? 'Expand left menu' : 'Minimize left menu');
-      sidebarToggle.title = collapsed ? 'Expand left menu' : 'Minimize left menu';
+      sidebarToggle.setAttribute('aria-label', collapsed ? 'Expand controls' : 'Minimize controls');
+      sidebarToggle.title = collapsed ? 'Expand controls' : 'Minimize controls';
     }
 
     function toggleSidebar() {
-      if (window.innerWidth <= 980) return;
-      appShell.classList.toggle('sidebar-collapsed');
+      if (window.innerWidth <= 980) {
+        appShell.classList.toggle('mobile-controls-collapsed');
+      } else {
+        appShell.classList.toggle('sidebar-collapsed');
+      }
       syncSidebarToggleUI();
     }
 
@@ -617,6 +870,7 @@ const appShell = document.getElementById('appShell');
       currentElement = null;
       currentType = null;
       revokeCurrentUrl();
+      setTapToStartVisible(false);
       placeholder.classList.remove('hidden');
       fileBadge.textContent = 'Ready';
     }
@@ -674,13 +928,27 @@ const appShell = document.getElementById('appShell');
       }
     }
 
-    async function safePlay() {
-      if (!currentElement || currentElement.tagName !== 'VIDEO') return;
+    function setTapToStartVisible(visible) {
+      tapToStart.classList.toggle('hidden', !visible);
+    }
+
+    async function safePlay(showPromptOnBlock = true) {
+      if (!currentElement || currentElement.tagName !== 'VIDEO') return false;
       try {
         await currentElement.play();
+        setTapToStartVisible(false);
+        return true;
       } catch (err) {
-        console.warn('Autoplay was blocked by the browser until user interaction.', err);
+        console.warn('Playback was blocked until user interaction.', err);
+        if (showPromptOnBlock) setTapToStartVisible(true);
+        return false;
       }
+    }
+
+    async function startMediaFromGesture() {
+      if (!currentElement || currentElement.tagName !== 'VIDEO') return;
+      applyPlaybackState();
+      await safePlay(false);
     }
 
 
@@ -2638,7 +2906,14 @@ const appShell = document.getElementById('appShell');
         const vid = document.createElement('video');
         vid.src = currentUrl;
         vid.playsInline = true;
+        vid.setAttribute('playsinline', '');
+        vid.setAttribute('webkit-playsinline', '');
         vid.preload = 'auto';
+        vid.muted = muteToggle.checked;
+        if (autoplayToggle.checked) {
+          vid.autoplay = true;
+          vid.setAttribute('autoplay', '');
+        }
         currentElement = vid;
       }
 
@@ -2657,7 +2932,7 @@ const appShell = document.getElementById('appShell');
     function togglePlayPause() {
       if (!currentElement) return;
       if (currentElement.tagName === 'VIDEO') {
-        if (currentElement.paused) currentElement.play();
+        if (currentElement.paused) safePlay(true);
         else currentElement.pause();
       } else if (currentType === 'preset') {
         if (presetAnimationFrame) {
@@ -2673,7 +2948,7 @@ const appShell = document.getElementById('appShell');
       if (!currentElement) return;
       if (currentElement.tagName === 'VIDEO') {
         currentElement.currentTime = 0;
-        if (autoplayToggle.checked || !currentElement.paused) currentElement.play();
+        if (autoplayToggle.checked || !currentElement.paused) safePlay(true);
       } else if (currentType === 'gif') {
         const src = currentElement.src;
         currentElement.src = '';
@@ -2685,17 +2960,78 @@ const appShell = document.getElementById('appShell');
       }
     }
 
+    function isFullscreenActive() {
+      return Boolean(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+    }
+
+    function isImmersiveActive() {
+      return document.body.classList.contains('viz-immersive');
+    }
+
+    function setFullscreenButtonLabels(active) {
+      const label = active ? 'Exit fullscreen' : 'Fullscreen';
+      fullscreenBtn.textContent = active ? 'Exit fullscreen' : 'Toggle fullscreen';
+      miniFullscreen.textContent = label;
+    }
+
+    async function enterBrowserFullscreen() {
+      const el = stage;
+      if (el.requestFullscreen) return el.requestFullscreen();
+      if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+      if (el.webkitEnterFullscreen) return el.webkitEnterFullscreen();
+      if (el.msRequestFullscreen) return el.msRequestFullscreen();
+      throw new Error('No stage fullscreen API available.');
+    }
+
+    async function exitBrowserFullscreen() {
+      if (document.exitFullscreen) return document.exitFullscreen();
+      if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+      if (document.msExitFullscreen) return document.msExitFullscreen();
+    }
+
+    function enterImmersiveFallback() {
+      document.body.classList.add('viz-immersive');
+      setFullscreenButtonLabels(true);
+      setTimeout(() => window.scrollTo(0, 1), 60);
+    }
+
+    function exitImmersiveFallback() {
+      document.body.classList.remove('viz-immersive');
+      setFullscreenButtonLabels(false);
+    }
+
     async function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        try {
-          await stage.requestFullscreen();
-        } catch (err) {
-          console.warn('Fullscreen failed.', err);
-        }
-      } else {
-        await document.exitFullscreen();
+      if (isFullscreenActive()) {
+        await exitBrowserFullscreen();
+        exitImmersiveFallback();
+        return;
+      }
+
+      if (isImmersiveActive()) {
+        exitImmersiveFallback();
+        return;
+      }
+
+      try {
+        await enterBrowserFullscreen();
+        setFullscreenButtonLabels(true);
+      } catch (err) {
+        console.warn('Native fullscreen unavailable; using mobile immersive fallback.', err);
+        enterImmersiveFallback();
       }
     }
+
+    tapToStart.addEventListener('click', startMediaFromGesture);
+    tapToStart.addEventListener('touchend', e => {
+      e.preventDefault();
+      startMediaFromGesture();
+    }, { passive: false });
+
+    document.addEventListener('fullscreenchange', () => setFullscreenButtonLabels(isFullscreenActive() || isImmersiveActive()));
+    document.addEventListener('webkitfullscreenchange', () => setFullscreenButtonLabels(isFullscreenActive() || isImmersiveActive()));
+    window.addEventListener('orientationchange', () => {
+      if (isImmersiveActive()) setTimeout(() => window.scrollTo(0, 1), 120);
+    });
 
     fileInput.addEventListener('change', e => loadFile(e.target.files[0]));
     sourceMode.addEventListener('change', syncSourceModeUI);
@@ -2758,8 +3094,10 @@ const appShell = document.getElementById('appShell');
 
     window.addEventListener('beforeunload', revokeCurrentUrl);
     window.addEventListener('resize', () => {
-      if (window.innerWidth <= 980 && appShell.classList.contains('sidebar-collapsed')) {
+      if (window.innerWidth <= 980) {
         appShell.classList.remove('sidebar-collapsed');
+      } else {
+        appShell.classList.remove('mobile-controls-collapsed');
       }
       if (currentType === 'preset' && currentElement?.tagName === 'CANVAS') {
         resizePresetCanvas(currentElement);
